@@ -1,0 +1,39 @@
+apply plugin: 'java'
+apply plugin: 'groovy'
+apply plugin: 'eclipse'
+
+sourceCompatibility = 1.7
+version = '1.0'
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'GSwingSpringLdap', 'Implementation-Version': version
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'commons-collections', name: 'commons-collections', version: '3.2'
+	compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.+'
+	compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.+'
+	compile group: 'javax.inject', name:'javax.inject', version: '1'
+	compile group: 'org.springframework.ldap', name:'spring-ldap-core', version:'2.0.0.RELEASE'
+	compile group: 'org.springframework.ldap', name:'spring-ldap-core-tiger', version:'2.0.0.RELEASE'
+	compile group: 'org.springframework', name:'spring-context', version:'3.2.4.RELEASE'
+	testCompile group: 'junit', name: 'junit', version: '4.+'
+	
+}
+
+test {
+    systemProperties 'property': 'value'
+}
+
+uploadArchives {
+    repositories {
+       flatDir {
+           dirs 'repos'
+       }
+    }
+}
