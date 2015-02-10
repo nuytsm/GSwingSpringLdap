@@ -30,58 +30,89 @@ class View {
 
 	@Inject
 	private LdapQueryService ldapQueryService;
-	@Bindable
-	List<QueryResult> results = new ArrayList<>(0);
-	@Bindable
+	def results;
 	String name = '';
-	@Bindable
 	String snumber = '';
+	SwingBuilder sb = new SwingBuilder();
 
 	public initView(){
-		SwingBuilder sb = new SwingBuilder();
 		sb.edt {
-			frame(title:'Frame', defaultCloseOperation:JFrame.EXIT_ON_CLOSE, size:[800, 600], locationRelativeTo: null, show: true) {
-				borderLayout()
-				panel(constraints:BL.NORTH){
-						borderLayout()
-						panel(constraints:BL.NORTH){
+			def customMenuBar = {
+				sb.menuBar{
+				  menu(text: "File", mnemonic: 'F') {
+					menuItem(text: "Exit", mnemonic: 'X', actionPerformed: { dispose() })
+				  }
+				}
+			 }
+			
+			def searchpanel = {
+				sb.panel(constraints:BL.NORTH){
 							borderLayout()
-							textlabel = label(text:"Name: ", constraints: BL.WEST)
-							nameField = textField(constraints: BL.CENTER, id:'fname');	
+							def textlabel = label(text:"Name: ", constraints: BL.WEST)
+							def nameField = textField(constraints: BL.CENTER, id:'fname', actionPerformed: {
+								findInfo()
+							}	)
 							bean(this, name: bind{fname.text})
-
+							
 						}
-						
-						panel(constraints:BL.CENTER){
+			}
+			
+			def serviceNumberPanel = {
+				sb.panel(constraints:BL.CENTER){
 							borderLayout()
-							textlabel = label(text:"Servicenumber: ", constraints: BL.WEST)
-							servicenumberField = textField(constraints: BL.CENTER, id:'snum');
+							def textlabel = label(text:"Servicenumber: ", constraints: BL.WEST)
+							def servicenumberField = textField(constraints: BL.CENTER, id:'snum', actionPerformed: {
+								findInfo()
+							}	)
 							bean(this, snumber: bind{snum.text})	
 						}
-						button(text:'Search',
-								actionPerformed: {
-											findInfo()
-								},constraints:BL.EAST)
-					
-				}
-
-				splitPane(dividerSize: 0, constraints:BL.CENTER) {
-					scrollPane(constraints: "left", preferredSize: [160, -1]) { list(id:'resultlist') }
+			}
+			
+			def searchbutton = {
+				sb.button(text:'Search',
+					actionPerformed: {
+								findInfo()
+					},constraints:BL.EAST)
+			}
+			
+			def resultspanel = {
+				sb.splitPane(dividerSize: 0, constraints:BL.CENTER) {
+					scrollPane(constraints: "left", preferredSize: [160, -1]) { 
+						results = list()
+					}
 					bean(this, results: bind{resultlist.model})
 					scrollPane(constraints: "right") { textArea(id:'resultdetail') }
 				}
 			}
+			
+			frame(title:'Frame', defaultCloseOperation:JFrame.EXIT_ON_CLOSE, size:[800, 600], locationRelativeTo: null, show: true ) {
+				customMenuBar()
+				borderLayout()
+				panel(constraints:BL.NORTH){
+						borderLayout()
+						searchpanel()
+						serviceNumberPanel()
+						
+						searchbutton()
+				}
+
+				resultspanel()
+			}
 		}
 	}
 
-	private findInfo() {
+	def findInfo() {
 		if (!name.empty){
 			log.info name
-			results = ldapQueryService.getByAccount(name)
-			snumber = ''
+			sb.doOutside {
+				results.listData = ldapQueryService.getByAccount(name)
+				snumber = ''
+			}
 		} else if (!snumber.empty){
 			log.info snumber
-			results = ldapQueryService.getByServiceNumber(snumber)
+			sb.doOutside {
+				results.listData = ldapQueryService.getByServiceNumber(snumber)
+			}
 			name = ''
 		} else {
 			log.info 'nothing to search for'
